@@ -10,6 +10,8 @@
 #if BX_CRT_NONE
 #	include <bx/cpu.h>
 #	include <bx/crt0.h>
+#elif BX_PLATFORM_WIIU
+#	include <coreinit/mutex.h>
 #elif  BX_PLATFORM_POSIX
 #	include <pthread.h>
 #elif  BX_PLATFORM_WINDOWS \
@@ -88,6 +90,27 @@ namespace bx
 		}
 
 		BX_TSAN_MUTEX_POST_UNLOCK(futex);
+	}
+
+#elif BX_PLATFORM_WIIU
+	Mutex::Mutex()
+	{
+		static_assert(sizeof(OSMutex) <= sizeof(m_internal) );
+		OSInitMutex( (OSMutex*)m_internal);
+	}
+
+	Mutex::~Mutex()
+	{
+	}
+
+	void Mutex::lock()
+	{
+		OSLockMutex( (OSMutex*)m_internal);
+	}
+
+	void Mutex::unlock()
+	{
+		OSUnlockMutex( (OSMutex*)m_internal);
 	}
 
 #else

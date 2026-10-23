@@ -14,6 +14,8 @@
 
 #if BX_CRT_NONE
 #	include <bx/crt0.h>
+#elif BX_PLATFORM_WIIU
+#	include <coreinit/thread.h>
 #elif  BX_PLATFORM_POSIX
 #	include <pthread.h>
 #elif  BX_PLATFORM_WINDOWS \
@@ -47,6 +49,9 @@ namespace bx
 		static DWORD WINAPI threadFunc(LPVOID _arg);
 		HANDLE m_handle;
 		DWORD  m_threadId;
+#elif BX_PLATFORM_WIIU
+		static int threadFunc(int _argc, const char** _argv);
+		OSThread* m_handle;
 #elif BX_PLATFORM_POSIX
 		static void* threadFunc(void* _arg);
 		pthread_t m_handle;
@@ -68,6 +73,13 @@ namespace bx
 		Thread* thread = (Thread*)_arg;
 		int32_t result = thread->entry();
 		return result;
+	}
+#elif BX_PLATFORM_WIIU
+	int ThreadInternal::threadFunc(int _argc, const char** _argv)
+	{
+		BX_UNUSED(_argv);
+		Thread* thread = (Thread*)(uintptr_t)(uint32_t)_argc;
+		return thread->entry();
 	}
 #else
 	void* ThreadInternal::threadFunc(void* _arg)
@@ -96,6 +108,8 @@ namespace bx
 	|| BX_PLATFORM_XBOXONE
 		ti->m_handle   = INVALID_HANDLE_VALUE;
 		ti->m_threadId = UINT32_MAX;
+#elif BX_PLATFORM_WIIU
+		ti->m_handle = NULL;
 #elif BX_PLATFORM_POSIX
 		ti->m_handle = 0;
 #endif // BX_PLATFORM_
@@ -140,6 +154,33 @@ namespace bx
 		{
 			return false;
 		}
+#elif BX_PLATFORM_WIIU
+		m_stackSize = alignUp(0 == m_stackSize ? 128*1024 : m_stackSize, 16);
+		// Keep the native thread and its stack in one allocation until join.
+		ti->m_handle = (OSThread*)alloc(getAllocator(), sizeof(OSThread) + m_stackSize, 16);
+		if (NULL == ti->m_handle)
+		{
+			return false;
+		}
+
+		memSet(ti->m_handle, 0, sizeof(OSThread) );
+		if (!OSCreateThread(ti->m_handle
+				, &ti->threadFunc
+				, (int32_t)(uintptr_t)this
+				, NULL
+				, (uint8_t*)(ti->m_handle + 1) + m_stackSize
+				, m_stackSize
+				, OSGetThreadPriority(OSGetCurrentThread() )
+				, OS_THREAD_ATTRIB_AFFINITY_ANY
+				) )
+		{
+			free(getAllocator(), ti->m_handle, 16);
+			ti->m_handle = NULL;
+			return false;
+		}
+
+		OSSetThreadRunQuantum(ti->m_handle, 1000);
+		OSResumeThread(ti->m_handle);
 #elif BX_PLATFORM_POSIX
 		int result;
 		BX_UNUSED(result);
@@ -194,6 +235,10 @@ namespace bx
 		WaitForSingleObjectEx(ti->m_handle, INFINITE, FALSE);
 		CloseHandle(ti->m_handle);
 		ti->m_handle = INVALID_HANDLE_VALUE;
+#elif BX_PLATFORM_WIIU
+		OSJoinThread(ti->m_handle, &m_exitCode);
+		free(getAllocator(), ti->m_handle, 16);
+		ti->m_handle = NULL;
 #elif BX_PLATFORM_POSIX
 		void* ptr;
 		pthread_join(ti->m_handle, &ptr);
@@ -229,6 +274,8 @@ namespace bx
 	|| BX_PLATFORM_IOS \
 	|| BX_PLATFORM_VISIONOS
 		pthread_setname_np(m_name.getCPtr() );
+#elif BX_PLATFORM_WIIU
+		OSSetThreadName(ti->m_handle, m_name.getCPtr() );
 #elif BX_CRT_GLIBC
 		pthread_setname_np(ti->m_handle, m_name.getCPtr() );
 #elif BX_PLATFORM_LINUX
@@ -304,6 +351,8 @@ namespace bx
 		return result;
 	}
 
+// WUT has no dynamic TLS key API. TlsData remains unavailable on this platform.
+#if !BX_PLATFORM_WIIU
 	struct TlsDataInternal
 	{
 #if BX_CRT_NONE
@@ -403,6 +452,8 @@ namespace bx
 		BX_ASSERT(0 == result, "pthread_setspecific failed %d.", result); BX_UNUSED(result);
 	}
 #endif // BX_PLATFORM_*
+
+#endif // !BX_PLATFORM_WIIU
 
 } // namespace bx
 

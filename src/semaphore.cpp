@@ -8,6 +8,10 @@
 #if BX_CONFIG_SUPPORTS_THREADING
 
 #if BX_CRT_NONE
+#elif BX_PLATFORM_WIIU
+#	include <coreinit/semaphore.h>
+#	include <coreinit/thread.h>
+#	include <coreinit/time.h>
 #elif  BX_PLATFORM_OSX \
 	|| BX_PLATFORM_IOS   \
 	|| BX_PLATFORM_VISIONOS
@@ -36,6 +40,8 @@ namespace bx
 	{
 #if BX_CRT_NONE
 
+#elif BX_PLATFORM_WIIU
+		OSSemaphore m_handle;
 #elif  BX_PLATFORM_OSX \
 	|| BX_PLATFORM_IOS   \
 	|| BX_PLATFORM_VISIONOS
@@ -70,6 +76,50 @@ namespace bx
 	{
 		BX_UNUSED(_msecs);
 		return false;
+	}
+#elif BX_PLATFORM_WIIU
+	Semaphore::Semaphore()
+	{
+		static_assert(sizeof(SemaphoreInternal) <= sizeof(m_internal) );
+		SemaphoreInternal* si = (SemaphoreInternal*)m_internal;
+		OSInitSemaphore(&si->m_handle, 0);
+	}
+
+	Semaphore::~Semaphore()
+	{
+	}
+
+	void Semaphore::post(uint32_t _count)
+	{
+		SemaphoreInternal* si = (SemaphoreInternal*)m_internal;
+		for (uint32_t ii = 0; ii < _count; ++ii)
+		{
+			OSSignalSemaphore(&si->m_handle);
+		}
+	}
+
+	bool Semaphore::wait(int32_t _msecs)
+	{
+		SemaphoreInternal* si = (SemaphoreInternal*)m_internal;
+		if (0 > _msecs)
+		{
+			OSWaitSemaphore(&si->m_handle);
+			return true;
+		}
+
+		// WUT exposes no timed semaphore wait. Sleep between native try-waits.
+		const OSTime deadline = OSGetSystemTime() + OSMillisecondsToTicks(_msecs);
+		const OSTime quantum = OSMicrosecondsToTicks(100);
+		while (0 >= OSTryWaitSemaphore(&si->m_handle) )
+		{
+			const OSTime remaining = deadline - OSGetSystemTime();
+			if (0 >= remaining)
+			{
+				return false;
+			}
+			OSSleepTicks(min(remaining, quantum) );
+		}
+		return true;
 	}
 #elif  BX_PLATFORM_OSX \
 	|| BX_PLATFORM_IOS   \

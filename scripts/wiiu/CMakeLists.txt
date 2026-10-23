@@ -18,16 +18,18 @@ add_library(bx STATIC
     ${BX_DIR}/src/mutex.cpp
     ${BX_DIR}/src/os.cpp
     ${BX_DIR}/src/scanner.cpp
+    ${BX_DIR}/src/semaphore.cpp
     ${BX_DIR}/src/sort.cpp
     ${BX_DIR}/src/string.cpp
     ${BX_DIR}/src/superluminal.cpp
+    ${BX_DIR}/src/thread.cpp
     ${BX_DIR}/src/timer.cpp
     ${BX_DIR}/src/url.cpp
 )
 target_compile_features(bx PUBLIC cxx_std_20)
 target_compile_definitions(bx PUBLIC
     BX_CONFIG_DEBUG=$<IF:$<CONFIG:Debug>,1,0>
-    BX_CONFIG_SUPPORTS_THREADING=0
+    BX_CONFIG_SUPPORTS_THREADING=1
 )
 target_compile_options(bx PRIVATE -fno-exceptions -fno-rtti)
 target_include_directories(bx PUBLIC ${BX_DIR}/include PRIVATE ${BX_DIR}/3rdparty)
