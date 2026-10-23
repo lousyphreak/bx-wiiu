@@ -99,6 +99,7 @@
 #	define BX_CPU_MIPS 1
 #	define BX_CACHE_LINE_SIZE 64
 #elif defined(_M_PPC)        \
+ ||   (defined(__WIIU__) && defined(__PPC__)) \
  ||   defined(__powerpc__)   \
  ||   defined(__powerpc64__)
 #	undef  BX_CPU_PPC
