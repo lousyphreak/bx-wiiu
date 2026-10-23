@@ -88,12 +88,21 @@ namespace bx
 	{
 		const uint8_t* data = (const uint8_t*)_ptr;
 
+#if BX_PLATFORM_WIIU
+		return 0
+			| uint32_t(data[0])<<24
+			| uint32_t(data[1])<<16
+			| uint32_t(data[2])<<8
+			| uint32_t(data[3])
+			;
+#else
 		return 0
 			| uint32_t(data[3])<<24
 			| uint32_t(data[2])<<16
 			| uint32_t(data[1])<<8
 			| uint32_t(data[0])
 			;
+#endif // BX_PLATFORM_WIIU
 	}
 
 	template<>
@@ -101,6 +110,18 @@ namespace bx
 	{
 		const uint8_t* data = (const uint8_t*)_ptr;
 
+#if BX_PLATFORM_WIIU
+		return 0
+			| uint64_t(data[0])<<56
+			| uint64_t(data[1])<<48
+			| uint64_t(data[2])<<40
+			| uint64_t(data[3])<<32
+			| uint64_t(data[4])<<24
+			| uint64_t(data[5])<<16
+			| uint64_t(data[6])<<8
+			| uint64_t(data[7])
+			;
+#else
 		return 0
 			| uint64_t(data[7])<<56
 			| uint64_t(data[6])<<48
@@ -111,6 +132,7 @@ namespace bx
 			| uint64_t(data[1])<<8
 			| uint64_t(data[0])
 			;
+#endif // BX_PLATFORM_WIIU
 	}
 
 	template<typename Ty>
