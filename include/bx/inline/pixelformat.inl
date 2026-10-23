@@ -727,7 +727,11 @@ namespace bx
 		//
 		const int32_t expMax  = (1<< ExpBitsT      ) - 1;
 		const int32_t expBias = (1<<(ExpBitsT - 1) ) - 1;
+#if BX_PLATFORM_WIIU
+		const float   sharedExpMax = float((1 << MantissaBitsT) - 1) / float(1 << MantissaBitsT) * float(1 << (expMax - expBias) );
+#else
 		const float   sharedExpMax = float(expMax) / float(expMax + 1) * float(1 << (expMax - expBias) );
+#endif // BX_PLATFORM_WIIU
 
 		const float rr = clamp(_src[0], 0.0f, sharedExpMax);
 		const float gg = clamp(_src[1], 0.0f, sharedExpMax);
@@ -735,7 +739,11 @@ namespace bx
 		const float mm = max(rr, gg, bb);
 		const uint32_t mm_as_ui = bitCast<uint32_t>(mm);
 
+#if BX_PLATFORM_WIIU
+		int32_t expShared = max(-expBias-1, int32_t( (mm_as_ui>>23) & 0xff) - 127) + 1 + expBias;
+#else
 		int32_t expShared = int32_t(max(uint32_t(-expBias-1), ( ( (mm_as_ui>>23) & 0xff) - 127) ) ) + 1 + expBias;
+#endif // BX_PLATFORM_WIIU
 		float denom = pow(2.0f, float(expShared - expBias - MantissaBitsT) );
 
 		if ( (1<<MantissaBitsT) == int32_t(round(mm/denom) ) )
@@ -755,6 +763,15 @@ namespace bx
 	inline void decodeRgbE(float* _dst, const float* _src)
 	{
 		const int32_t expBias = (1<<(ExpBitsT - 1) ) - 1;
+#if BX_PLATFORM_WIIU
+		const float exponent  = _src[3]-float(expBias+MantissaBitsT);
+		const float scale     = pow(2.0f, exponent);
+
+		_dst[0] = _src[0] * scale;
+		_dst[1] = _src[1] * scale;
+		_dst[2] = _src[2] * scale;
+		_dst[3] = 1.0f;
+#else
 		const float exponent  = _src[3]-float(expBias-MantissaBitsT);
 		const float scale     = pow(2.0f, exponent);
 		const float invScale  = rcpSafe(scale);
@@ -762,6 +779,7 @@ namespace bx
 		_dst[0] = _src[0] * invScale;
 		_dst[1] = _src[1] * invScale;
 		_dst[2] = _src[2] * invScale;
+#endif // BX_PLATFORM_WIIU
 	}
 
 	// RGB9E5F
