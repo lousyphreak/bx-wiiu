@@ -5,9 +5,12 @@ get_filename_component(BX_DIR "../.." ABSOLUTE)
 add_library(bx STATIC
     ${BX_DIR}/src/allocator.cpp
     ${BX_DIR}/src/bitarray.cpp
+    ${BX_DIR}/src/bounds.cpp
     ${BX_DIR}/src/bx.cpp
+    ${BX_DIR}/src/commandline.cpp
     ${BX_DIR}/src/debug.cpp
     ${BX_DIR}/src/dtoa.cpp
+    ${BX_DIR}/src/easing.cpp
     ${BX_DIR}/src/file.cpp
     ${BX_DIR}/src/filepath.cpp
     ${BX_DIR}/src/hash.cpp
