@@ -89,6 +89,7 @@ namespace bx
 	  || BX_PLATFORM_IOS        \
 	  || BX_PLATFORM_OSX        \
 	  || BX_PLATFORM_VISIONOS   \
+	  || BX_PLATFORM_WIIU       \
 		|| BX_PLATFORM_NX
 #		define fseeko64 fseeko
 #		define ftello64 ftello

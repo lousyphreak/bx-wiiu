@@ -11,6 +11,8 @@
 #	include <time.h> // clock, clock_gettime
 #elif BX_PLATFORM_EMSCRIPTEN
 #	include <emscripten.h>
+#elif BX_PLATFORM_WIIU
+#	include <coreinit/time.h>
 #elif BX_PLATFORM_WINDOWS || BX_PLATFORM_XBOXONE || BX_PLATFORM_WINRT
 #	ifndef WIN32_LEAN_AND_MEAN
 #		define WIN32_LEAN_AND_MEAN
@@ -38,6 +40,8 @@ namespace bx
 		int64_t i64 = now.tv_sec*INT64_C(1000000000) + now.tv_nsec;
 #elif BX_PLATFORM_EMSCRIPTEN
 		int64_t i64 = int64_t(1000.0f * emscripten_get_now() );
+#elif BX_PLATFORM_WIIU
+		int64_t i64 = OSGetTime();
 #elif !BX_PLATFORM_NONE
 		struct timeval now;
 		gettimeofday(&now, NULL);
@@ -61,6 +65,8 @@ namespace bx
 		return li.QuadPart;
 #elif BX_PLATFORM_ANDROID
 		return INT64_C(1000000000);
+#elif BX_PLATFORM_WIIU
+		return OSTimerClockSpeed;
 #elif BX_PLATFORM_EMSCRIPTEN
 		return INT64_C(1000000);
 #else

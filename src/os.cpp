@@ -18,6 +18,9 @@
 #	endif // WIN32_LEAN_AND_MEAN
 #	include <windows.h>
 #	include <psapi.h>
+#elif BX_PLATFORM_WIIU
+#	include <coreinit/thread.h>
+#	include <coreinit/time.h>
 #elif  BX_PLATFORM_POSIX
 #	include <sched.h> // sched_yield
 #	if BX_PLATFORM_IOS       \
@@ -52,6 +55,8 @@ namespace bx
 	{
 #if BX_PLATFORM_WINDOWS
 		::Sleep(_ms);
+#elif BX_PLATFORM_WIIU
+		OSSleepTicks(OSMillisecondsToTicks(_ms) );
 #elif  BX_PLATFORM_XBOXONE \
 	|| BX_PLATFORM_WINRT   \
 	|| BX_CRT_NONE
@@ -68,6 +73,8 @@ namespace bx
 	{
 #if BX_PLATFORM_WINDOWS
 		::SwitchToThread();
+#elif BX_PLATFORM_WIIU
+		OSYieldThread();
 #elif  BX_PLATFORM_XBOXONE \
 	|| BX_PLATFORM_WINRT   \
 	|| BX_CRT_NONE
@@ -126,6 +133,8 @@ namespace bx
 	{
 #if BX_CRT_NONE
 		return 1;
+#elif BX_PLATFORM_WIIU
+		return 3;
 #elif BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
 		SYSTEM_INFO si;
 		memSet(&si, 0, sizeof(si) );
@@ -143,6 +152,8 @@ namespace bx
 	{
 #if BX_PLATFORM_WINDOWS
 		return ::GetCurrentThreadId();
+#elif BX_PLATFORM_WIIU
+		return uint32_t(uintptr_t(OSGetCurrentThread() ) );
 #elif  BX_PLATFORM_LINUX \
 	|| BX_PLATFORM_RPI
 		return (pid_t)::syscall(SYS_gettid);
@@ -235,6 +246,7 @@ namespace bx
 	|| BX_PLATFORM_XBOXONE    \
 	|| BX_PLATFORM_WINRT      \
 	|| BX_PLATFORM_NX         \
+	|| BX_PLATFORM_WIIU       \
 	|| BX_CRT_NONE
 		BX_UNUSED(_filePath);
 		return NULL;
@@ -260,6 +272,7 @@ namespace bx
 	|| BX_PLATFORM_XBOXONE    \
 	|| BX_PLATFORM_WINRT      \
 	|| BX_PLATFORM_NX         \
+	|| BX_PLATFORM_WIIU       \
 	|| BX_CRT_NONE
 		BX_UNUSED(_handle);
 #else
@@ -281,6 +294,7 @@ namespace bx
 	|| BX_PLATFORM_XBOXONE    \
 	|| BX_PLATFORM_WINRT      \
 	|| BX_PLATFORM_NX         \
+	|| BX_PLATFORM_WIIU       \
 	|| BX_CRT_NONE
 		BX_UNUSED(_handle, symbol);
 		return NULL;
@@ -325,6 +339,7 @@ namespace bx
 	|| BX_PLATFORM_XBOXONE    \
 	|| BX_PLATFORM_WINRT      \
 	|| BX_PLATFORM_NX         \
+	|| BX_PLATFORM_WIIU       \
 	|| BX_CRT_NONE
 		BX_UNUSED(name, _out, _inOutSize);
 		return false;
@@ -389,6 +404,7 @@ namespace bx
 	|| BX_PLATFORM_XBOXONE    \
 	|| BX_PLATFORM_WINRT      \
 	|| BX_PLATFORM_NX         \
+	|| BX_PLATFORM_WIIU       \
 	|| BX_CRT_NONE
 		BX_UNUSED(name, value);
 #else

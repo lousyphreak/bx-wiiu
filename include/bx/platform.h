@@ -60,6 +60,7 @@
 #define BX_PLATFORM_PS5        0
 #define BX_PLATFORM_RPI        0
 #define BX_PLATFORM_VISIONOS   0
+#define BX_PLATFORM_WIIU       0
 #define BX_PLATFORM_WINDOWS    0
 #define BX_PLATFORM_WINRT      0
 #define BX_PLATFORM_XBOXONE    0
@@ -102,7 +103,11 @@
  ||   defined(__powerpc64__)
 #	undef  BX_CPU_PPC
 #	define BX_CPU_PPC 1
-#	define BX_CACHE_LINE_SIZE 128
+#	if defined(__WIIU__)
+#		define BX_CACHE_LINE_SIZE 64
+#	else
+#		define BX_CACHE_LINE_SIZE 128
+#	endif
 #elif defined(__riscv)   \
  ||   defined(__riscv__) \
  ||   defined(RISCVEL)
@@ -158,7 +163,10 @@
 #endif // BX_CPU_PPC
 
 // http://sourceforge.net/apps/mediawiki/predef/index.php?title=Operating_Systems
-#if defined(_DURANGO) || defined(_XBOX_ONE)
+#if defined(__WIIU__)
+#	undef  BX_PLATFORM_WIIU
+#	define BX_PLATFORM_WIIU 1
+#elif defined(_DURANGO) || defined(_XBOX_ONE)
 #	undef  BX_PLATFORM_XBOXONE
 #	define BX_PLATFORM_XBOXONE 1
 #elif defined(_WIN32) || defined(_WIN64)
@@ -246,6 +254,9 @@
 #	elif defined(__GLIBC__)
 #		undef  BX_CRT_GLIBC
 #		define BX_CRT_GLIBC (__GLIBC__ * 10000 + __GLIBC_MINOR__ * 100)
+#	elif BX_PLATFORM_WIIU
+#		undef  BX_CRT_NEWLIB
+#		define BX_CRT_NEWLIB 1
 #	elif defined(__MINGW32__) \
 	||   defined(__MINGW64__)
 #		undef  BX_CRT_MINGW
@@ -281,6 +292,7 @@
 
 ///
 #define BX_PLATFORM_NONE !(0   \
+	||  BX_PLATFORM_WIIU       \
 	||  BX_PLATFORM_ANDROID    \
 	||  BX_PLATFORM_BSD        \
 	||  BX_PLATFORM_EMSCRIPTEN \
@@ -301,6 +313,7 @@
 
 ///
 #define BX_PLATFORM_OS_CONSOLE  (0 \
+	||  BX_PLATFORM_WIIU           \
 	||  BX_PLATFORM_NX             \
 	||  BX_PLATFORM_PS4            \
 	||  BX_PLATFORM_PS5            \
@@ -389,6 +402,8 @@
 #	define BX_PLATFORM_NAME "visionOS"
 #elif BX_PLATFORM_WINDOWS
 #	define BX_PLATFORM_NAME "Windows"
+#elif BX_PLATFORM_WIIU
+#	define BX_PLATFORM_NAME "Wii U"
 #elif BX_PLATFORM_WINRT
 #	define BX_PLATFORM_NAME "WinRT"
 #elif BX_PLATFORM_XBOXONE
@@ -491,7 +506,7 @@ static_assert(!BX_COMPILER_MSVC || BX_COMPILER_MSVC >= 1935, "\n\n"
 	"\tMinimum supported MSVC 19.35 / Visual Studio 2022 version 17.5 (February 21, 2023).\n"
 	"\t\n");
 
-static_assert(!BX_CPU_ENDIAN_BIG, "\n\n"
+static_assert(!BX_CPU_ENDIAN_BIG || BX_PLATFORM_WIIU, "\n\n"
 	"\t** IMPORTANT! **\n\n"
 	"\tThe code was not tested for big endian, and big endian CPU is considered unsupported.\n"
 	"\t\n");

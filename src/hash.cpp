@@ -4,6 +4,9 @@
  */
 
 #include <bx/hash.h>
+#if BX_PLATFORM_WIIU
+#include <bx/endian.h>
+#endif // BX_PLATFORM_WIIU
 #include <bx/simd_t.h>
 
 namespace bx
@@ -162,7 +165,11 @@ void mixTail32(Ty& _self, const uint8_t*& _data, int32_t& _len)
 
 		if (4 == _self.m_count)
 		{
+#if BX_PLATFORM_WIIU
+			uint32_t kk = toLittleEndian(loadUnaligned<uint32_t>(&_self.m_tail[0]) );
+#else
 			uint32_t kk = loadUnaligned<uint32_t>(&_self.m_tail[0]);
+#endif // BX_PLATFORM_WIIU
 			_self.mix(kk);
 			_self.m_count = 0;
 		}
@@ -176,7 +183,11 @@ void addData32(Ty& _self, const uint8_t* _data, int32_t _len)
 {
 	while (_len >= 4)
 	{
+#if BX_PLATFORM_WIIU
+		uint32_t kk = toLittleEndian(FnT(_data) );
+#else
 		uint32_t kk = FnT(_data);
+#endif // BX_PLATFORM_WIIU
 
 		_self.mix(kk);
 
@@ -217,8 +228,13 @@ void mixTail128(Ty& _self, const uint8_t*& _data, int32_t& _len)
 
 		if (16 == _self.m_count)
 		{
+#if BX_PLATFORM_WIIU
+			const uint64_t kk1 = toLittleEndian(loadUnaligned<uint64_t>(&_self.m_tail[0]) );
+			const uint64_t kk2 = toLittleEndian(loadUnaligned<uint64_t>(&_self.m_tail[8]) );
+#else
 			const uint64_t kk1 = loadUnaligned<uint64_t>(&_self.m_tail[0]);
 			const uint64_t kk2 = loadUnaligned<uint64_t>(&_self.m_tail[8]);
+#endif // BX_PLATFORM_WIIU
 			_self.mix(kk1, kk2);
 			_self.m_count = 0;
 		}
@@ -232,8 +248,13 @@ void addData128(Ty& _self, const uint8_t* _data, int32_t _len)
 {
 	while (_len >= 16)
 	{
+#if BX_PLATFORM_WIIU
+		uint64_t kk1 = toLittleEndian(FnT(_data) );
+		uint64_t kk2 = toLittleEndian(FnT(_data + 8) );
+#else
 		uint64_t kk1 = FnT(_data);
 		uint64_t kk2 = FnT(_data + 8);
+#endif // BX_PLATFORM_WIIU
 
 		_self.mix(kk1, kk2);
 
