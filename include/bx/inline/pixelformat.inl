@@ -980,6 +980,25 @@ namespace bx
 		_dst[3] = float( ( (packed>>30) &   0x3) ) /    3.0f;
 	}
 
+	// RGB10A2U
+	inline void packRgb10A2U(void* _dst, const float* _src)
+	{
+		uint32_t* dst = (uint32_t*)_dst;
+		*dst = (uint32_t(_src[0]) & 0x3ff)
+			| ((uint32_t(_src[1]) & 0x3ff) << 10)
+			| ((uint32_t(_src[2]) & 0x3ff) << 20)
+			| ((uint32_t(_src[3]) & 3) << 30);
+	}
+
+	inline void unpackRgb10A2U(float* _dst, const void* _src)
+	{
+		const uint32_t value = *(const uint32_t*)_src;
+		_dst[0] = float(value & 0x3ff);
+		_dst[1] = float((value >> 10) & 0x3ff);
+		_dst[2] = float((value >> 20) & 0x3ff);
+		_dst[3] = float(value >> 30);
+	}
+
 	// RG11B10F
 	inline void packRG11B10F(void* _dst, const float* _src)
 	{

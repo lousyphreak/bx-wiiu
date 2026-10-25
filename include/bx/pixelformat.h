@@ -236,6 +236,10 @@ namespace bx
 	void packRgb10A2(void* _dst, const float* _src);
 	void unpackRgb10A2(float* _dst, const void* _src);
 
+	// RGB10A2U
+	void packRgb10A2U(void* _dst, const float* _src);
+	void unpackRgb10A2U(float* _dst, const void* _src);
+
 	// RG11B10F
 	void packRG11B10F(void* _dst, const float* _src);
 	void unpackRG11B10F(float* _dst, const void* _src);
