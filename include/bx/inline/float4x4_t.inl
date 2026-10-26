@@ -51,7 +51,13 @@ namespace bx
 		{
 			const float* aa = (const float*)_a;
 			const float* bb = (const float*)_b;
+#if BX_PLATFORM_WIIU
+			// A disjoint result lets compilers retain the input values.
+			float result[16];
+			float *rr = result;
+#else
 			float *rr = (float*)_result;
+#endif // BX_PLATFORM_WIIU
 
 			rr[ 0] = aa[ 0]*bb[ 0] + aa[ 1]*bb[ 4] + aa[ 2]*bb[ 8] + aa[ 3]*bb[12];
 			rr[ 1] = aa[ 0]*bb[ 1] + aa[ 1]*bb[ 5] + aa[ 2]*bb[ 9] + aa[ 3]*bb[13];
@@ -72,6 +78,9 @@ namespace bx
 			rr[13] = aa[12]*bb[ 1] + aa[13]*bb[ 5] + aa[14]*bb[ 9] + aa[15]*bb[13];
 			rr[14] = aa[12]*bb[ 2] + aa[13]*bb[ 6] + aa[14]*bb[10] + aa[15]*bb[14];
 			rr[15] = aa[12]*bb[ 3] + aa[13]*bb[ 7] + aa[14]*bb[11] + aa[15]*bb[15];
+#if BX_PLATFORM_WIIU
+			*_result = bitCast<float4x4_t>(result);
+#endif // BX_PLATFORM_WIIU
 		}
 	}
 
