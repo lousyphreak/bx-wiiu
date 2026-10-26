@@ -485,6 +485,15 @@ done:
 				goto done;
 			}
 
+#if BX_PLATFORM_WIIU
+			// A uniform digit is an identity permutation.
+			if (histogram[uint16_t((keys[0]>>shift)&radix_sort_detail::kBitMask)] == _size)
+			{
+				shift += radix_sort_detail::kBits;
+				continue;
+			}
+
+#endif // BX_PLATFORM_WIIU
 			uint32_t offset = 0;
 			for (uint32_t ii = 0; ii < radix_sort_detail::kHistogramSize; ++ii)
 			{
@@ -514,6 +523,17 @@ done:
 		}
 
 done:
+#if BX_PLATFORM_WIIU
+		if (keys != _keys)
+		{
+			// Copy only when the last actual scatter used temporary storage.
+			memCopy(_keys, keys, _size*sizeof(uint64_t) );
+			for (uint32_t ii = 0; ii < _size; ++ii)
+			{
+				_values[ii] = values[ii];
+			}
+		}
+#else
 		if (0 != (pass&1) )
 		{
 			// Odd number of passes needs to do copy to the destination.
@@ -523,6 +543,7 @@ done:
 				_values[ii] = _tempValues[ii];
 			}
 		}
+#endif // BX_PLATFORM_WIIU
 	}
 
 } // namespace bx
