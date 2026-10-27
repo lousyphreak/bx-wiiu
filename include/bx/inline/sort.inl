@@ -463,6 +463,48 @@ done:
 		uint32_t histogram[radix_sort_detail::kHistogramSize];
 		uint16_t shift = 0;
 		uint32_t pass = 0;
+#if BX_PLATFORM_WIIU
+
+		// Up to four ordered runs need at most two sequential merge passes.
+		uint32_t runs[5] = {};
+		uint32_t numRuns = 1;
+		uint32_t runEnd = 1;
+		for (; runEnd < _size; ++runEnd)
+		{
+			if (keys[runEnd] < keys[runEnd-1])
+			{
+				if (4 == numRuns)
+				{
+					break;
+				}
+				runs[numRuns++] = runEnd;
+			}
+		}
+		if (runEnd >= _size)
+		{
+			runs[numRuns] = _size;
+			for (uint32_t width = 1; width < numRuns; width *= 2)
+			{
+				for (uint32_t run = 0; run < numRuns; run += width*2)
+				{
+					uint32_t left = runs[run];
+					const uint32_t middle = runs[min(run+width, numRuns)];
+					uint32_t right = middle;
+					const uint32_t end = runs[min(run+width*2, numRuns)];
+					for (uint32_t dest = left; dest < end; ++dest)
+					{
+						const uint32_t source = left < middle && (right == end || keys[left] <= keys[right]) ? left++ : right++;
+						tempKeys[dest] = keys[source];
+						tempValues[dest] = values[source];
+					}
+				}
+				swap(keys, tempKeys);
+				swap(values, tempValues);
+			}
+			goto done;
+		}
+
+#endif // BX_PLATFORM_WIIU
 		for (; pass < 6; ++pass)
 		{
 			memSet(histogram, 0, sizeof(uint32_t)*radix_sort_detail::kHistogramSize);
@@ -526,7 +568,7 @@ done:
 #if BX_PLATFORM_WIIU
 		if (keys != _keys)
 		{
-			// Copy only when the last actual scatter used temporary storage.
+			// Copy only when the last sorting pass used temporary storage.
 			memCopy(_keys, keys, _size*sizeof(uint64_t) );
 			for (uint32_t ii = 0; ii < _size; ++ii)
 			{
