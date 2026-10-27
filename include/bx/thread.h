@@ -39,7 +39,12 @@ namespace bx
 		/// @param[in] _name Thread name used by debugger.
 		/// @returns True if thread is created, otherwise returns false.
 		///
-		bool init(ThreadFn _fn, void* _userData = NULL, uint32_t _stackSize = 0, const StringView& _name = "");
+		bool init(ThreadFn _fn, void* _userData = NULL, uint32_t _stackSize = 0, const StringView& _name = ""
+#if BX_PLATFORM_WIIU
+			// Native core mask, applied before the thread can run.
+			, uint32_t _affinity = 7
+#endif
+			);
 
 		///
 		void shutdown();

@@ -123,7 +123,11 @@ namespace bx
 		}
 	}
 
-	bool Thread::init(ThreadFn _fn, void* _userData, uint32_t _stackSize, const StringView& _name)
+	bool Thread::init(ThreadFn _fn, void* _userData, uint32_t _stackSize, const StringView& _name
+#if BX_PLATFORM_WIIU
+		, uint32_t _affinity
+#endif
+		)
 	{
 		BX_ASSERT(!m_running, "Already running!");
 
@@ -171,7 +175,7 @@ namespace bx
 				, (uint8_t*)(ti->m_handle + 1) + m_stackSize
 				, m_stackSize
 				, OSGetThreadPriority(OSGetCurrentThread() )
-				, OS_THREAD_ATTRIB_AFFINITY_ANY
+				, OSThreadAttributes(_affinity)
 				) )
 		{
 			free(getAllocator(), ti->m_handle, 16);
