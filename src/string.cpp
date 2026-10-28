@@ -134,7 +134,12 @@ namespace bx
 
 	inline uint32_t matchBytes(const char* _str, simd64_t _pattern)
 	{
+#if BX_PLATFORM_WIIU
+		// The byte mask numbers lanes from the least significant byte.
+		const uint64_t word    = toLittleEndian(loadUnaligned<uint64_t>(_str) );
+#else
 		const uint64_t word    = loadUnaligned<uint64_t>(_str);
+#endif
 		const simd64_t chunk   = simd64_splat(word);
 		const simd64_t low7    = simd64_splat(uint8_t(0x7f) );
 		const simd64_t diff    = simd64_xor(chunk, _pattern);
